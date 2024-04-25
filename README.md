@@ -8,11 +8,11 @@ both webgl and webgpu [wasm](https://webassembly.org/) as well as native.
 # native
 cargo run -r 
 
-# webgl
-trunk serve --features webgl
+# webgpu
+trunk serve --features webgpu
 
 # webgl
-trunk serve --features webgpu
+trunk serve --features webgl
 ```
 
 ## Prerequisites (web)

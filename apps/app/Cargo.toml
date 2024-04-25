@@ -1,0 +1,12 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+template = { path = "../../crates/template" }
+
+[features]
+default = []
+webgl = ["template/webgl"]
+webgpu = ["template/webgpu"]

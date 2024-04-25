@@ -2,12 +2,6 @@ on: [push, pull_request]
 
 name: CI
 
-env:
-  # This is required to enable the web_sys clipboard API which egui_web uses
-  # https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Clipboard.html
-  # https://rustwasm.github.io/docs/wasm-bindgen/web-sys/unstable-apis.html
-  RUSTFLAGS: --cfg=web_sys_unstable_apis
-
 jobs:
   check:
     name: Check
@@ -22,7 +16,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --all-features
+          args: --features webgpu
 
   check_wasm:
     name: Check wasm32
@@ -38,7 +32,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
-          args: --all-features --lib --target wasm32-unknown-unknown
+          args: --features webgpu --lib --target wasm32-unknown-unknown
 
   test:
     name: Test Suite
@@ -96,10 +90,10 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.72.0
+          toolchain: 1.77.2
           target: wasm32-unknown-unknown
           override: true
       - name: Download and install Trunk binary
         run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.18.8/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
       - name: Build
-        run: ./trunk build --features webgpu
+        run: ./trunk build --features webgpu --config apps/app/Trunk.toml

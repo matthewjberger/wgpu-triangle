@@ -11,7 +11,7 @@ build:
 
 check:
     cargo check --all --tests
-    cargo fmt --all --check
+    cargo fmt --all -- --check
 
 docs $project="mui":
     cargo doc --open -p {{project}}
@@ -25,14 +25,14 @@ fix:
 lint:
     cargo clippy --all --tests -- -D warnings
 
-run $project="template":
+run $project="app":
     cargo run -r -p {{project}}
 
-run-webgl $project="template":
-    trunk serve --features webgl
+run-webgl $project="app":
+    trunk serve --features webgl --open --config apps/{{project}}/Trunk.toml
 
-run-webgpu $project="template":
-    trunk serve --features webgpu 
+run-webgpu $project="app":
+    trunk serve --features webgpu --open --config apps/{{project}}/Trunk.toml
 
 udeps:
     cargo machete
