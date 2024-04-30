@@ -6,13 +6,13 @@ both webgl and webgpu [wasm](https://webassembly.org/) as well as native.
 
 ```
 # native
-cargo run -r 
+cargo run -r  -p app
 
 # webgpu
-trunk serve --features webgpu
+trunk serve --features webgpu --open --config apps/app/Trunk.toml
 
 # webgl
-trunk serve --features webgl
+trunk serve --features webgl --open --config apps/app/Trunk.toml
 ```
 
 ## Prerequisites (web)
