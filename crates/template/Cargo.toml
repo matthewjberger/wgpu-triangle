@@ -7,28 +7,28 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-bytemuck = { version = "1.15.0", features = ["derive"] }
+bytemuck = { version = "1.16.0", features = ["derive"] }
 egui = "0.27.2"
 egui-wgpu = { version = "0.27.2", features = ["winit"] }
-env_logger = "0.11.2"
+env_logger = "0.11.3"
 log = "0.4.21"
-winit = "0.29.10"
+winit = "0.29.15"
 nalgebra-glm = { version = "0.18.0", features = [
     "convert-bytemuck",
     "serde-serialize",
 ] }
-wgpu = { version = "0.19.1", default-features = false }
+wgpu = { version = "0.19.4", default-features = false }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 egui-winit = "0.27.2"
 pollster = "0.3.0"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-console_error_panic_hook = "0.1.0"
+console_error_panic_hook = "0.1.7"
 console_log = "1.0.0"
 egui-winit = { version = "0.27.2", default-features = false }
-wasm-bindgen = "0.2.91"
-wasm-bindgen-futures = "0.4.41"
+wasm-bindgen = "0.2.92"
+wasm-bindgen-futures = "0.4.42"
 web-sys = { version = "0.3.69", features = [
     "Window",
     "Document",
