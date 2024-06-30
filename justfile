@@ -13,7 +13,7 @@ check:
     cargo check --all --tests
     cargo fmt --all -- --check
 
-docs $project="mui":
+docs $project="engine":
     cargo doc --open -p {{project}}
 
 format:
