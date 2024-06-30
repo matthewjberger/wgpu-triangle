@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-template = { path = "../../crates/template" }
+engine = { path = "../../crates/engine" }
 
 [features]
 default = []
-webgl = ["template/webgl"]
-webgpu = ["template/webgpu"]
+webgl = ["engine/webgl"]
+webgpu = ["engine/webgpu"]
