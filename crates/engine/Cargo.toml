@@ -7,11 +7,11 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-bytemuck = { version = "1.16.0", features = ["derive"] }
+bytemuck = { version = "1.16.1", features = ["derive"] }
 egui = "0.27.2"
 egui-wgpu = { version = "0.27.2", features = ["winit"] }
 env_logger = "0.11.3"
-log = "0.4.21"
+log = "0.4.22"
 winit = "0.29.15"
 nalgebra-glm = { version = "0.18.0", features = [
     "convert-bytemuck",
