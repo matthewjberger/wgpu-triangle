@@ -7,18 +7,6 @@ pub use web_time::{Duration, Instant};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(target_arch = "wasm32")]
-use console_error_panic_hook::set_once as set_panic_hook;
-
-use crate::renderer::Renderer;
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(start)]
-pub async fn run_wasm() {
-    set_panic_hook();
-    launch_app();
-}
-
 pub fn launch_app() {
     let event_loop = winit::event_loop::EventLoopBuilder::with_user_event()
         .build()
@@ -86,7 +74,7 @@ async fn run_app(event_loop: winit::event_loop::EventLoop<()>, window: winit::wi
     #[cfg(target_arch = "wasm32")]
     let (width, height) = (1280, 720);
 
-    let mut renderer = Renderer::new(window.clone(), width, height).await;
+    let mut renderer = crate::renderer::Renderer::new(window.clone(), width, height).await;
 
     let mut last_render_time = Instant::now();
 
