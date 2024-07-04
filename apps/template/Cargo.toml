@@ -1,0 +1,12 @@
+[package]
+name = "template"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+engine = { path = "../../crates/engine" }
+
+[features]
+default = []
+webgl = ["engine/webgl"]
+webgpu = ["engine/webgpu"]

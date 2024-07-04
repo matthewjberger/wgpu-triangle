@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Engine</title>
+        <base data-trunk-public-url />
+        <style type="text/css">
+            :focus {
+                outline: none;
+            }
+        </style>
+    </head>
+
+    <body>
+        <link
+            data-trunk
+            rel="rust"
+            href="Cargo.toml"
+            data-target-name="template"
+        />
+        <div class="root">
+            <canvas
+                class="main-canvas"
+                id="canvas"
+                width="600"
+                height="600"
+            ></canvas>
+        </div>
+    </body>
+</html>
