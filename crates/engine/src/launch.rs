@@ -7,7 +7,15 @@ pub use web_time::{Duration, Instant};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-pub fn launch_app() {
+/// Data shared between engine and application layers
+#[derive(Default)]
+pub struct Context {}
+
+pub trait State {
+    fn update(&mut self, _engine_context: &mut Context, _ui_context: &egui::Context);
+}
+
+pub fn launch(state: impl State + 'static) {
     let event_loop = winit::event_loop::EventLoopBuilder::with_user_event()
         .build()
         .expect("Failed to create event loop");
@@ -39,18 +47,22 @@ pub fn launch_app() {
     #[cfg(not(target_arch = "wasm32"))]
     {
         env_logger::init();
-        pollster::block_on(run_app(event_loop, window));
+        pollster::block_on(run_app(event_loop, window, state));
     }
 
     #[cfg(target_arch = "wasm32")]
     {
         std::panic::set_hook(Box::new(console_error_panic_hook::hook));
         console_log::init().expect("could not initialize logger");
-        wasm_bindgen_futures::spawn_local(run_app(event_loop, window));
+        wasm_bindgen_futures::spawn_local(run_app(event_loop, window, state));
     }
 }
 
-async fn run_app(event_loop: winit::event_loop::EventLoop<()>, window: winit::window::Window) {
+async fn run_app(
+    event_loop: winit::event_loop::EventLoop<()>,
+    window: winit::window::Window,
+    mut app: impl State + 'static,
+) {
     let window = std::sync::Arc::new(window);
 
     let gui_context = egui::Context::default();
@@ -75,6 +87,8 @@ async fn run_app(event_loop: winit::event_loop::EventLoop<()>, window: winit::wi
     let (width, height) = (1280, 720);
 
     let mut renderer = crate::renderer::Renderer::new(window.clone(), width, height).await;
+
+    let mut app_context = Context::default();
 
     let mut last_render_time = Instant::now();
 
@@ -129,21 +143,7 @@ async fn run_app(event_loop: winit::event_loop::EventLoop<()>, window: winit::wi
                             let gui_input = gui_state.take_egui_input(&window);
                             gui_state.egui_ctx().begin_frame(gui_input);
 
-                            #[cfg(not(target_arch = "wasm32"))]
-                            let title = "Rust/Wgpu";
-
-                            #[cfg(feature = "webgpu")]
-                            let title = "Rust/Wgpu/Webgpu";
-
-                            #[cfg(feature = "webgl")]
-                            let title = "Rust/Wgpu/Webgl";
-
-                            egui::Window::new(title).show(gui_state.egui_ctx(), |ui| {
-                                ui.heading("Hello, world!");
-                                if ui.button("Click me!").clicked() {
-                                    log::info!("Button clicked!");
-                                }
-                            });
+                            app.update(&mut app_context, gui_state.egui_ctx());
 
                             let egui::FullOutput {
                                 textures_delta,

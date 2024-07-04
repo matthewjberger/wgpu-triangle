@@ -1,5 +1,3 @@
-use crate::Duration;
-
 pub struct Renderer<'window> {
     gpu: Gpu<'window>,
     depth_texture_view: wgpu::TextureView,
@@ -35,6 +33,7 @@ impl<'window> Renderer<'window> {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn resize(&mut self, width: u32, height: u32) {
         self.gpu.resize(width, height);
         self.depth_texture_view = self.gpu.create_depth_texture(width, height);
@@ -45,7 +44,7 @@ impl<'window> Renderer<'window> {
         screen_descriptor: egui_wgpu::ScreenDescriptor,
         paint_jobs: Vec<egui::ClippedPrimitive>,
         textures_delta: egui::TexturesDelta,
-        delta_time: Duration,
+        delta_time: crate::Duration,
     ) {
         let delta_time = delta_time.as_secs_f32();
 
@@ -153,6 +152,7 @@ impl<'window> Gpu<'window> {
         self.surface_config.width as f32 / self.surface_config.height.max(1) as f32
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn resize(&mut self, width: u32, height: u32) {
         self.surface_config.width = width;
         self.surface_config.height = height;
