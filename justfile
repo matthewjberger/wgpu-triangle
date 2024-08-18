@@ -28,6 +28,12 @@ lint:
 run $project="app":
     cargo run -r -p {{project}}
 
+build-webgpu $project="app":
+    trunk build --features webgl --config apps/{{project}}/Trunk.toml
+
+build-webgl $project="app":
+    trunk build --features webgl --config apps/{{project}}/Trunk.toml
+
 run-webgl $project="app":
     trunk serve --features webgl --open --config apps/{{project}}/Trunk.toml
 

@@ -1,5 +1,7 @@
 fn main() {
-    engine::launch(App);
+    if let Err(error) = engine::launch(App) {
+        eprintln!("Failed to launch app: {error}");
+    }
 }
 
 #[derive(Default)]

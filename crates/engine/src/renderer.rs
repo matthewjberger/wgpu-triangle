@@ -1,3 +1,5 @@
+use wgpu::MemoryHints;
+
 pub struct Renderer<'window> {
     gpu: Gpu<'window>,
     depth_texture_view: wgpu::TextureView,
@@ -21,6 +23,7 @@ impl<'window> Renderer<'window> {
             gpu.surface_config.format,
             Some(Self::DEPTH_FORMAT),
             1,
+            false,
         );
 
         let scene = Scene::new(&gpu.device, gpu.surface_format);
@@ -33,7 +36,6 @@ impl<'window> Renderer<'window> {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn resize(&mut self, width: u32, height: u32) {
         self.gpu.resize(width, height);
         self.depth_texture_view = self.gpu.create_depth_texture(width, height);
@@ -42,8 +44,8 @@ impl<'window> Renderer<'window> {
     pub fn render_frame(
         &mut self,
         screen_descriptor: egui_wgpu::ScreenDescriptor,
-        paint_jobs: Vec<egui::ClippedPrimitive>,
-        textures_delta: egui::TexturesDelta,
+        paint_jobs: Vec<crate::egui::epaint::ClippedPrimitive>,
+        textures_delta: crate::egui::TexturesDelta,
         delta_time: crate::Duration,
     ) {
         let delta_time = delta_time.as_secs_f32();
@@ -152,7 +154,6 @@ impl<'window> Gpu<'window> {
         self.surface_config.width as f32 / self.surface_config.height.max(1) as f32
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn resize(&mut self, width: u32, height: u32) {
         self.surface_config.width = width;
         self.surface_config.height = height;
@@ -236,6 +237,8 @@ impl<'window> Gpu<'window> {
 
                         #[cfg(all(target_arch = "wasm32", feature = "webgl"))]
                         required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
+
+                        memory_hints: MemoryHints::default(),
                     },
                     None,
                 )
@@ -368,6 +371,7 @@ impl Scene {
                 module: &shader_module,
                 entry_point: "vertex_main",
                 buffers: &[Vertex::description(&Vertex::vertex_attributes())],
+                compilation_options: Default::default(),
             },
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleStrip,
@@ -398,8 +402,10 @@ impl Scene {
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
+                compilation_options: Default::default(),
             }),
             multiview: None,
+            cache: None,
         })
     }
 }
