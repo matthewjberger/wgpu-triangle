@@ -1,6 +1,6 @@
 set windows-shell := ["powershell.exe"]
 
-export RUST_LOG := "info"
+export RUST_LOG := "info,wgpu_core=off"
 export RUST_BACKTRACE := "1"
 
 @just:
