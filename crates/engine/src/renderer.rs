@@ -1,5 +1,3 @@
-use wgpu::MemoryHints;
-
 pub struct Renderer<'window> {
     gpu: Gpu<'window>,
     depth_texture_view: wgpu::TextureView,
@@ -238,7 +236,7 @@ impl<'window> Gpu<'window> {
                         #[cfg(all(target_arch = "wasm32", feature = "webgl"))]
                         required_limits: wgpu::Limits::downlevel_webgl2_defaults(),
 
-                        memory_hints: MemoryHints::default(),
+                        memory_hints: wgpu::MemoryHints::default(),
                     },
                     None,
                 )
