@@ -218,7 +218,7 @@ impl ApplicationHandler for App {
                 *last_render_time = now;
 
                 let gui_input = gui_state.take_egui_input(window);
-                gui_state.egui_ctx().begin_frame(gui_input);
+                gui_state.egui_ctx().begin_pass(gui_input);
 
                 state.update(context, gui_state.egui_ctx());
 
@@ -227,7 +227,7 @@ impl ApplicationHandler for App {
                     shapes,
                     pixels_per_point,
                     ..
-                } = gui_state.egui_ctx().end_frame();
+                } = gui_state.egui_ctx().end_pass();
 
                 let paint_jobs = gui_state.egui_ctx().tessellate(shapes, pixels_per_point);
 
