@@ -129,9 +129,11 @@ impl<'window> Renderer<'window> {
                 occlusion_query_set: None,
             });
             self.scene.render(&mut render_pass);
-
-            self.egui_renderer
-                .render(&mut render_pass, &paint_jobs, &screen_descriptor);
+            self.egui_renderer.render(
+                &mut render_pass.forget_lifetime(),
+                &paint_jobs,
+                &screen_descriptor,
+            );
         }
 
         self.gpu.queue.submit(std::iter::once(encoder.finish()));
