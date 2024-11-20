@@ -38,13 +38,13 @@ pub fn launch(initial_state: impl State + 'static) -> Result<(), winit::error::E
 #[derive(Default)]
 struct App {
     window: Option<Arc<Window>>,
-    renderer: Option<Renderer<'static>>,
+    renderer: Option<Renderer>,
     state: Option<Box<dyn State>>,
     gui_state: Option<egui_winit::State>,
     app_context: Option<Context>,
     last_render_time: Option<Instant>,
     #[cfg(target_arch = "wasm32")]
-    renderer_receiver: Option<Receiver<Renderer<'static>>>,
+    renderer_receiver: Option<Receiver<Renderer>>,
     last_size: (u32, u32),
 }
 

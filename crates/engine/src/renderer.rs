@@ -1,15 +1,15 @@
-pub struct Renderer<'window> {
-    gpu: Gpu<'window>,
+pub struct Renderer {
+    gpu: Gpu,
     depth_texture_view: wgpu::TextureView,
     egui_renderer: egui_wgpu::Renderer,
     scene: Scene,
 }
 
-impl<'window> Renderer<'window> {
+impl Renderer {
     const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
 
     pub async fn new(
-        window: impl Into<wgpu::SurfaceTarget<'window>>,
+        window: impl Into<wgpu::SurfaceTarget<'static>>,
         width: u32,
         height: u32,
     ) -> Self {
@@ -141,15 +141,15 @@ impl<'window> Renderer<'window> {
     }
 }
 
-pub struct Gpu<'window> {
-    pub surface: wgpu::Surface<'window>,
+pub struct Gpu {
+    pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub surface_config: wgpu::SurfaceConfiguration,
     pub surface_format: wgpu::TextureFormat,
 }
 
-impl<'window> Gpu<'window> {
+impl Gpu {
     pub fn aspect_ratio(&self) -> f32 {
         self.surface_config.width as f32 / self.surface_config.height.max(1) as f32
     }
@@ -191,7 +191,7 @@ impl<'window> Gpu<'window> {
     }
 
     pub async fn new_async(
-        window: impl Into<wgpu::SurfaceTarget<'window>>,
+        window: impl Into<wgpu::SurfaceTarget<'static>>,
         width: u32,
         height: u32,
     ) -> Self {
