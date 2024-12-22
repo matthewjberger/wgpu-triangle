@@ -21,8 +21,24 @@ pub use web_time::{Duration, Instant};
 use wasm_bindgen::prelude::*;
 
 /// Data shared between engine and application layers
-#[derive(Default)]
-pub struct Context {}
+pub struct Context {
+    renderer: Renderer,
+    window: Arc<Window>,
+}
+
+impl Context {
+    fn new(window: Arc<Window>, renderer: Renderer) -> Self {
+        Self { renderer, window }
+    }
+
+    pub fn renderer(&mut self) -> &mut Renderer {
+        &mut self.renderer
+    }
+
+    pub fn window(&self) -> &Arc<Window> {
+        &self.window
+    }
+}
 
 pub trait State {
     fn initialize(&mut self, _context: &mut Context) {}
@@ -41,8 +57,6 @@ pub fn launch(initial_state: impl State + 'static) -> Result<(), winit::error::E
 
 #[derive(Default)]
 struct App {
-    window: Option<Arc<Window>>,
-    renderer: Option<Renderer>,
     state: Option<Box<dyn State>>,
     gui_state: Option<egui_winit::State>,
     app_context: Option<Context>,
@@ -92,9 +106,9 @@ impl ApplicationHandler for App {
         }
 
         if let Ok(window) = event_loop.create_window(attributes) {
-            let first_window_handle = self.window.is_none();
-            let window_handle = std::sync::Arc::new(window);
-            self.window = Some(window_handle.clone());
+            let first_window_handle = self.app_context.is_none();
+            let window_handle = Arc::new(window);
+
             if first_window_handle {
                 let gui_context = egui::Context::default();
 
@@ -120,18 +134,23 @@ impl ApplicationHandler for App {
                 );
 
                 #[cfg(not(target_arch = "wasm32"))]
-                let (width, height) = (
-                    window_handle.inner_size().width,
-                    window_handle.inner_size().height,
-                );
-
-                #[cfg(not(target_arch = "wasm32"))]
                 {
+                    let (width, height) = (
+                        window_handle.inner_size().width,
+                        window_handle.inner_size().height,
+                    );
+
                     env_logger::init();
+                    let renderer_window_handle = window_handle.clone();
                     let renderer = pollster::block_on(async move {
-                        Renderer::new(window_handle.clone(), width, height).await
+                        Renderer::new(renderer_window_handle, width, height).await
                     });
-                    self.renderer = Some(renderer);
+
+                    let mut context = Context::new(window_handle.clone(), renderer);
+                    if let Some(state) = self.state.as_mut() {
+                        state.initialize(&mut context);
+                    }
+                    self.app_context = Some(context);
                 }
 
                 #[cfg(target_arch = "wasm32")]
@@ -141,6 +160,7 @@ impl ApplicationHandler for App {
                     std::panic::set_hook(Box::new(console_error_panic_hook::hook));
                     console_log::init().expect("Failed to initialize logger!");
                     log::info!("Canvas dimensions: ({canvas_width} x {canvas_height})");
+                    let window_handle = window_handle.clone();
                     wasm_bindgen_futures::spawn_local(async move {
                         let renderer =
                             Renderer::new(window_handle.clone(), canvas_width, canvas_height).await;
@@ -152,11 +172,6 @@ impl ApplicationHandler for App {
 
                 self.gui_state = Some(gui_state);
                 self.last_render_time = Some(Instant::now());
-                let mut context = Context::default();
-                if let Some(state) = self.state.as_mut() {
-                    state.initialize(&mut context);
-                }
-                self.app_context = Some(context);
             }
         }
     }
@@ -164,39 +179,33 @@ impl ApplicationHandler for App {
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
         #[cfg(target_arch = "wasm32")]
         {
-            let mut renderer_received = false;
-            if let Some(receiver) = self.renderer_receiver.as_mut() {
-                if let Ok(Some(renderer)) = receiver.try_recv() {
-                    self.renderer = Some(renderer);
-                    renderer_received = true;
+            if let Some(receiver) = self.renderer_receiver.take() {
+                if let Ok(renderer) = receiver.try_recv() {
+                    let window = self.app_context.as_ref().map(|ctx| ctx.window().clone());
+                    if let Some(window) = window {
+                        let context = Context::new(window, renderer);
+                        if let Some(state) = self.state.as_mut() {
+                            state.initialize(&mut context);
+                        }
+                        self.app_context = Some(context);
+                    }
+                } else {
+                    self.renderer_receiver = Some(receiver);
                 }
-            }
-            if renderer_received {
-                self.renderer_receiver = None;
             }
         }
 
-        let (
-            Some(gui_state),
-            Some(renderer),
-            Some(window),
-            Some(last_render_time),
-            Some(state),
-            Some(context),
-        ) = (
+        let (Some(gui_state), Some(last_render_time), Some(state), Some(context)) = (
             self.gui_state.as_mut(),
-            self.renderer.as_mut(),
-            self.window.as_ref(),
             self.last_render_time.as_mut(),
             self.state.as_mut(),
             self.app_context.as_mut(),
-        )
-        else {
+        ) else {
             return;
         };
 
         // Receive gui window event
-        if gui_state.on_window_event(window, &event).consumed {
+        if gui_state.on_window_event(context.window(), &event).consumed {
             return;
         }
 
@@ -205,20 +214,18 @@ impl ApplicationHandler for App {
             WindowEvent::KeyboardInput {
                 event:
                     winit::event::KeyEvent {
-                        physical_key: winit::keyboard::PhysicalKey::Code(key_code),
+                        physical_key:
+                            winit::keyboard::PhysicalKey::Code(winit::keyboard::KeyCode::Escape),
                         ..
                     },
                 ..
             } => {
-                // Exit by pressing the escape key
-                if matches!(key_code, winit::keyboard::KeyCode::Escape) {
-                    event_loop.exit();
-                }
+                event_loop.exit();
             }
             WindowEvent::Resized(PhysicalSize { width, height }) => {
                 let (width, height) = ((width).max(1), (height).max(1));
                 log::info!("Resizing renderer surface to: ({width}, {height})");
-                renderer.resize(width, height);
+                context.renderer.resize(width, height);
                 state.resize(context, width, height);
                 self.last_size = (width, height);
             }
@@ -233,7 +240,7 @@ impl ApplicationHandler for App {
 
                 state.update(context);
 
-                let gui_input = gui_state.take_egui_input(window);
+                let gui_input = gui_state.take_egui_input(context.window());
                 gui_state.egui_ctx().begin_pass(gui_input);
 
                 state.ui(context, gui_state.egui_ctx());
@@ -251,15 +258,20 @@ impl ApplicationHandler for App {
                     let (width, height) = self.last_size;
                     egui_wgpu::ScreenDescriptor {
                         size_in_pixels: [width, height],
-                        pixels_per_point: window.scale_factor() as f32,
+                        pixels_per_point: context.window().scale_factor() as f32,
                     }
                 };
 
-                renderer.render_frame(screen_descriptor, paint_jobs, textures_delta, delta_time);
+                context.renderer.render_frame(
+                    screen_descriptor,
+                    paint_jobs,
+                    textures_delta,
+                    delta_time,
+                );
             }
             event => state.receive_event(context, &event),
         }
 
-        window.request_redraw();
+        context.window().request_redraw();
     }
 }
