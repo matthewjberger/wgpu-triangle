@@ -369,7 +369,7 @@ impl Scene {
             layout: Some(&pipeline_layout),
             vertex: wgpu::VertexState {
                 module: &shader_module,
-                entry_point: "vertex_main",
+                entry_point: Some("vertex_main"),
                 buffers: &[Vertex::description(&Vertex::vertex_attributes())],
                 compilation_options: Default::default(),
             },
@@ -396,7 +396,7 @@ impl Scene {
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader_module,
-                entry_point: "fragment_main",
+                entry_point: Some("fragment_main"),
                 targets: &[Some(wgpu::ColorTargetState {
                     format: surface_format,
                     blend: Some(wgpu::BlendState::ALPHA_BLENDING),
