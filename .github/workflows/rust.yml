@@ -96,4 +96,4 @@ jobs:
       - name: Download and install Trunk binary
         run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.18.8/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
       - name: Build
-        run: ./trunk build --features webgpu --config apps/app/Trunk.toml
+        run: ./trunk build --features webgpu --config apps/triangle/Trunk.toml

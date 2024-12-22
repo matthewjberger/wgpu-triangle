@@ -11,11 +11,11 @@ build:
     cargo build -r
 
 # Builds the project for WebGL
-build-webgl $project="app":
+build-webgl $project="triangle":
     trunk build --features webgl --config apps/{{project}}/Trunk.toml
 
 # Builds the project for WebGPU
-build-webgpu $project="app":
+build-webgpu $project="triangle":
     trunk build --features webgl --config apps/{{project}}/Trunk.toml
 
 # Runs cargo check and format check
@@ -40,15 +40,15 @@ lint:
     cargo clippy --all --tests -- -D warnings
 
 # Runs the specified project
-run $project="app":
+run $project="triangle":
     cargo run -r -p {{project}}
 
 # Runs the project using WebGL
-run-webgl $project="app":
+run-webgl $project="triangle":
     trunk serve --features webgl --open --config apps/{{project}}/Trunk.toml
 
 # Runs the project using WebGPU
-run-webgpu $project="app":
+run-webgpu $project="triangle":
     trunk serve --features webgpu --open --config apps/{{project}}/Trunk.toml
 
 # Runs all tests
@@ -66,5 +66,5 @@ udeps:
     cargo clippy -- --version
 
 # Watches for changes and runs the specified project
-watch $project="app":
+watch $project="triangle":
     cargo watch -x 'run -r -p {{project}}'

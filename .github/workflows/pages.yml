@@ -27,10 +27,10 @@ jobs:
         run: wget -qO- https://github.com/trunk-rs/trunk/releases/download/v0.18.8/trunk-x86_64-unknown-linux-gnu.tar.gz | tar -xzf-
 
       - name: Build
-        run: ./trunk build --features webgpu --release --public-url "${GITHUB_REPOSITORY#*/}" --config apps/app/Trunk.toml
+        run: ./trunk build --features webgpu --release --public-url "${GITHUB_REPOSITORY#*/}" --config apps/triangle/Trunk.toml
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: apps/app/dist
+          folder: apps/triangle/dist
           single-commit: true

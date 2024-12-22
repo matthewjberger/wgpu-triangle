@@ -26,20 +26,6 @@ pub struct Context {
     window: Arc<Window>,
 }
 
-impl Context {
-    fn new(window: Arc<Window>, renderer: Renderer) -> Self {
-        Self { renderer, window }
-    }
-
-    pub fn renderer(&mut self) -> &mut Renderer {
-        &mut self.renderer
-    }
-
-    pub fn window(&self) -> &Arc<Window> {
-        &self.window
-    }
-}
-
 pub trait State {
     fn initialize(&mut self, _context: &mut Context) {}
     fn resize(&mut self, _context: &mut Context, _width: u32, _height: u32) {}
@@ -146,7 +132,10 @@ impl ApplicationHandler for App {
                         Renderer::new(renderer_window_handle, width, height).await
                     });
 
-                    let mut context = Context::new(window_handle.clone(), renderer);
+                    let mut context = Context {
+                        window: window_handle.clone(),
+                        renderer,
+                    };
                     if let Some(state) = self.state.as_mut() {
                         state.initialize(&mut context);
                     }
@@ -205,7 +194,7 @@ impl ApplicationHandler for App {
         };
 
         // Receive gui window event
-        if gui_state.on_window_event(context.window(), &event).consumed {
+        if gui_state.on_window_event(&context.window, &event).consumed {
             return;
         }
 
@@ -240,7 +229,7 @@ impl ApplicationHandler for App {
 
                 state.update(context);
 
-                let gui_input = gui_state.take_egui_input(context.window());
+                let gui_input = gui_state.take_egui_input(&context.window);
                 gui_state.egui_ctx().begin_pass(gui_input);
 
                 state.ui(context, gui_state.egui_ctx());
@@ -258,7 +247,7 @@ impl ApplicationHandler for App {
                     let (width, height) = self.last_size;
                     egui_wgpu::ScreenDescriptor {
                         size_in_pixels: [width, height],
-                        pixels_per_point: context.window().scale_factor() as f32,
+                        pixels_per_point: context.window.scale_factor() as f32,
                     }
                 };
 
@@ -272,6 +261,6 @@ impl ApplicationHandler for App {
             event => state.receive_event(context, &event),
         }
 
-        context.window().request_redraw();
+        context.window.request_redraw();
     }
 }
