@@ -25,7 +25,11 @@ use wasm_bindgen::prelude::*;
 pub struct Context {}
 
 pub trait State {
-    fn update(&mut self, _engine_context: &mut Context, _ui_context: &egui::Context);
+    fn initialize(&mut self, _context: &mut Context) {}
+    fn resize(&mut self, _context: &mut Context, _width: u32, _height: u32) {}
+    fn receive_event(&mut self, _context: &mut Context, _event: &WindowEvent) {}
+    fn update(&mut self, _context: &mut Context) {}
+    fn ui(&mut self, _context: &mut Context, _ui: &egui::Context) {}
 }
 
 pub fn launch(initial_state: impl State + 'static) -> Result<(), winit::error::EventLoopError> {
@@ -148,7 +152,11 @@ impl ApplicationHandler for App {
 
                 self.gui_state = Some(gui_state);
                 self.last_render_time = Some(Instant::now());
-                self.app_context = Some(Context::default());
+                let mut context = Context::default();
+                if let Some(state) = self.state.as_mut() {
+                    state.initialize(&mut context);
+                }
+                self.app_context = Some(context);
             }
         }
     }
@@ -211,6 +219,7 @@ impl ApplicationHandler for App {
                 let (width, height) = ((width).max(1), (height).max(1));
                 log::info!("Resizing renderer surface to: ({width}, {height})");
                 renderer.resize(width, height);
+                state.resize(context, width, height);
                 self.last_size = (width, height);
             }
             WindowEvent::CloseRequested => {
@@ -222,10 +231,12 @@ impl ApplicationHandler for App {
                 let delta_time = now - *last_render_time;
                 *last_render_time = now;
 
+                state.update(context);
+
                 let gui_input = gui_state.take_egui_input(window);
                 gui_state.egui_ctx().begin_pass(gui_input);
 
-                state.update(context, gui_state.egui_ctx());
+                state.ui(context, gui_state.egui_ctx());
 
                 let egui_winit::egui::FullOutput {
                     textures_delta,
@@ -246,7 +257,7 @@ impl ApplicationHandler for App {
 
                 renderer.render_frame(screen_descriptor, paint_jobs, textures_delta, delta_time);
             }
-            _ => (),
+            event => state.receive_event(context, &event),
         }
 
         window.request_redraw();
